@@ -1,0 +1,50 @@
+import java.util.regex.Pattern
+
+plugins {
+    id 'java'
+}
+
+allprojects {
+    group 'org.salgar.scala.pattern'
+    version '1.0-SNAPSHOT'
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    sourceCompatibility = '1.8'
+
+    def scalaVersion = System.getProperty('scala.version', '2.13.6')
+    def scalaMajorVersion = toMajorVersion(scalaVersion)
+
+    ext.versions = [
+            scala    : [major: scalaMajorVersion, current: scalaVersion],
+            akka     : System.getProperty('akka.version', '2.6.15')
+    ]
+}
+
+project(':demo') {
+    apply plugin: 'scala'
+
+    dependencies {
+        implementation "com.typesafe.akka:akka-actor-typed_${versions.scala.major}:${versions.akka}"
+        implementation "com.typesafe.akka:akka-persistence-typed_${versions.scala.major}:${versions.akka}"
+        implementation "com.chuusai:shapeless_${versions.scala.major}:2.3.3"
+        implementation "org.scala-lang:scala-library:${versions.scala.current}"
+
+        testImplementation("org.scalatest:scalatest-wordspec_${versions.scala.major}:3.2.10")
+        testImplementation("org.scalatest:scalatest-shouldmatchers_${versions.scala.major}:3.2.10")
+        testImplementation("com.typesafe.akka:akka-actor-testkit-typed_${versions.scala.major}:${versions.akka}")
+    }
+}
+
+def static toMajorVersion(String scalaVersion) {
+    def pattern = Pattern.compile('(\\d+\\.\\d+)\\.\\d+.*')
+    def matcher = pattern.matcher(scalaVersion)
+    if (matcher.matches()) {
+        return matcher.group(1)
+    } else {
+        throw new IllegalArgumentException("Unable to parse scala major version '$scalaVersion'.")
+    }
+}
